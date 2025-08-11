@@ -14,8 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // Twilio client
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 // Rota principal
 app.get('/', (req, res) => {
   res.send('Servidor Twilio WhatsApp está rodando 🚀');
