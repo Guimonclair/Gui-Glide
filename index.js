@@ -58,3 +58,15 @@ app.post('/debug-webhook', (req, res) => {
     receivedBody: req.body
   });
 });
+
+
+
+app.all('*', (req, res) => {
+  res.status(200).json({
+    message: 'Rota genérica ativada',
+    method: req.method,
+    path: req.path,
+    headers: req.headers,
+    body: req.body
+  });
+});
