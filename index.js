@@ -45,3 +45,16 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+
+app.post('/debug-webhook', (req, res) => {
+  console.log('🔍 Webhook recebido!');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+
+  res.status(200).json({
+    message: 'Webhook recebido com sucesso!',
+    receivedHeaders: req.headers,
+    receivedBody: req.body
+  });
+});
