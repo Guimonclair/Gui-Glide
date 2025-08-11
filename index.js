@@ -15,6 +15,7 @@ app.use(express.json());
 
 // Twilio client
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
 // Rota principal
 app.get('/', (req, res) => {
   res.send('Servidor Twilio WhatsApp está rodando 🚀');
@@ -22,7 +23,14 @@ app.get('/', (req, res) => {
 
 // Rota para enviar mensagem de template
 app.post('/send-message', async (req, res) => {
-  const { to, templateName, templateParams } = req.body;
+  const { to, templateName, ...rest } = req.body;
+
+  // Reconstrói o objeto templateParams a partir dos campos individuais
+  const templateParams = Object.fromEntries(
+    Object.entries(rest)
+      .filter(([key]) => key.startsWith('templateParams.'))
+      .map(([key, value]) => [key.split('.')[1], value])
+  );
 
   try {
     const response = await client.messages.create({
@@ -39,13 +47,7 @@ app.post('/send-message', async (req, res) => {
   }
 });
 
-// Inicia o servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-
+// Rota para debug de webhook
 app.post('/debug-webhook', (req, res) => {
   console.log('🔍 Webhook recebido!');
   console.log('Headers:', req.headers);
@@ -58,8 +60,7 @@ app.post('/debug-webhook', (req, res) => {
   });
 });
 
-
-
+// Rota genérica
 app.all('*', (req, res) => {
   res.status(200).json({
     message: 'Rota genérica ativada',
@@ -68,4 +69,10 @@ app.all('*', (req, res) => {
     headers: req.headers,
     body: req.body
   });
+});
+
+// Inicia o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
