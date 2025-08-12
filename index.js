@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const twilio = require('twilio');
 
 const app = express();
+
+const whatsappFrom = `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`;
+
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -60,12 +64,14 @@ app.post('/send-catalogo', async (req, res) => {
     console.log('🛍️ Enviando catálogo promocional para:', to);
 
     // 1) Mensagem de texto
-    await client.messages.create({
-      from: `whatsapp:${fromNumber}`,
-      to: to,
-      body: 'Segue nosso catálogo de promoções. Aproveite para renovar seu estoque! 😉'
-    });
+   
+         await client.messages.create({
+       from: whatsappFrom,
+       to:   `whatsapp:${toRaw}`,   // garanta que venha só o número limpo
+       body: 'Segue nosso catálogo de promoções. Aproveite para renovar seu estoque! 😉'
+     });
 
+    
     // 2) Imagem página 1
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
