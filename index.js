@@ -68,14 +68,17 @@ app.post('/send-catalogo', async (req, res) => {
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
       to: `whatsapp:${to}`,
-      mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
+      // mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
+      mediaUrl: ['https://i.imgur.com/ExdKOOz.png'] // imagem 1
     });
 
     // Mensagem 3: imagem da segunda página
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
       to: `whatsapp:${to}`,
-      mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
+     //  mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
+      mediaUrl: ['https://i.imgur.com/ZF6s192.png'] // imagem 2
+
     });
 
     res.status(200).json({ success: true, message: 'Catálogo enviado com sucesso.' });
