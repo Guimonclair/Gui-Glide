@@ -19,41 +19,68 @@ const whatsappSender = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
 
 // ... sua rota /send-message permanece igual ...
-// 🚪 Rota para envio de mensagem de serviço via template
+// 🚪 Rota para envio de mensagem via template WhatsApp
 app.post('/send-message', async (req, res) => {
+  // 1️⃣ Destruturação dos parâmetros esperados
+  const { to, template_id, Cliente, Pedido, Data } = req.body;
+
+  // 2️⃣ Validação básica dos campos obrigatórios
+  if (!to || !template_id || !Cliente || !Pedido || !Data) {
+    return res.status(400).json({
+      error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.'
+    });
+  }
+
+  // 3️⃣ Normalização do número para WhatsApp
+  const toNumber    = to.startsWith('whatsapp:')    ? to    : `whatsapp:${to}`;
+  const fromNumber  = fromNumberRaw.startsWith('whatsapp:') 
+                        ? fromNumberRaw 
+                        : `whatsapp:${fromNumberRaw}`;
+
+  // 4️⃣ Log dos dados recebidos (ajuda a ver exatamente o que chegou)
+  console.log('📨 [SEND-MESSAGE] Payload recebido:', {
+    toNumber, template_id, Cliente, Pedido, Data
+  });
+
   try {
-    const { to, template_id, Cliente, Pedido, Data } = req.body;
+    // 5️⃣ Montagem do objeto de variáveis do template
+    const contentVariables = {
+      '1': Cliente,
+      '2': Pedido,
+      '3': Data
+    };
 
-    if (!to || !template_id || !Cliente || !Pedido || !Data) {
-      return res
-        .status(400)
-        .json({ error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.' });
-    }
-
-    console.log('📨 Dados recebidos do Glide:', { to, template_id, Cliente, Pedido, Data });
-
+    // 6️⃣ Chamada ao Twilio
     const response = await client.messages.create({
-      to: to.startsWith('whatsapp:') ? to : `whatsapp:${to}`,
-      from: fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`,
-      contentSid: template_id,
-      contentVariables: JSON.stringify({
-        '1': Cliente,
-        '2': Pedido,
-        '3': Data
-      })
+      to:               toNumber,
+      from:             fromNumber,
+      contentSid:       template_id,       
+      contentVariables,                     
     });
 
-    res.status(200).json({ success: true, sid: response.sid });
+    // 7️⃣ Sucesso: retorna o SID da mensagem
+    return res.status(200).json({
+      success: true,
+      sid:     response.sid
+    });
+
   } catch (error) {
-    console.error('Erro ao enviar mensagem:', error);
-    res.status(500).json({ error: 'Erro ao enviar mensagem.' });
+    // 8️⃣ Log detalhado do erro no servidor
+    console.error('❌ [SEND-MESSAGE] Erro ao enviar mensagem:', {
+      message:   error.message,
+      code:      error.code || null,
+      moreInfo:  error.moreInfo || null,
+      stack:     error.stack
+    });
+
+    // 9️⃣ Retorno ao cliente com detalhes mínimos para debug
+    return res.status(500).json({
+      error:     error.message,
+      code:      error.code,
+      moreInfo:  error.moreInfo
+    });
   }
 });
-
-
-
-
-
 
 
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
