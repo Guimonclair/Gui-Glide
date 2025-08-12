@@ -66,36 +66,47 @@ app.post('/send-message', async (req, res) => {
 // inicio do novo bloco
 
 app.post('/send-catalogo', async (req, res) => {
-  // filtro rápido: só executa o catálogo para inbound text
-  // nos status callbacks e outros eventos devolve 200 e pára aqui
-  if (req.body.Direction !== 'inbound' || req.body.MessageType !== 'text') {
-    console.log('Webhook ignorado (não é inbound text):', req.body);
+  console.log('📥 Webhook /send-catalogo recebido:', req.body);
+
+  // só prossegue em inbound-text (quando o cliente manda algo)
+  if (req.body.SmsStatus !== 'received' || req.body.MessageType !== 'text') {
+    console.log('🔇 Ignorando webhook (não é inbound text).');
     return res.sendStatus(200);
   }
 
-  // a partir daqui, tenho certeza que é um inbound text
-  const rawClientNum = req.body.From || req.body.to;
+  // chega aqui só se for mensagem RECEBIDA do cliente
+  const rawClientNum = req.body.From;
   const to = rawClientNum.startsWith('whatsapp:')
     ? rawClientNum
     : `whatsapp:${rawClientNum}`;
 
-  console.log('▶️ inbound text detectado, enviando catálogo para', to);
+  console.log('▶️ inbound text confirmado, enviando catálogo para', to);
 
   try {
-    await client.messages.create({ from: fromNumber, to, body: 'Segue nosso catálogo de promoções…' });
-    await client.messages.create({ from: fromNumber, to,
+    await client.messages.create({
+      from: fromNumber,
+      to,
+      body: 'Segue nosso catálogo de promoções. Aproveite! 😉'
+    });
+
+    await client.messages.create({
+      from: fromNumber,
+      to,
       mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
     });
-    await client.messages.create({ from: fromNumber, to,
+
+    await client.messages.create({
+      from: fromNumber,
+      to,
       mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
     });
-    return res.json({ success: true, message: 'Catálogo enviado.' });
-  } catch (err) {
-    console.error('Erro ao enviar catálogo:', err);
-    return res.status(500).json({ error: 'Falha ao enviar catálogo.' });
+
+    return res.status(200).json({ success: true, message: 'Catálogo enviado com sucesso.' });
+  } catch (error) {
+    console.error('❌ [SEND-CATALOGO] Erro ao enviar catálogo:', error);
+    return res.status(500).json({ error: 'Erro ao enviar catálogo.' });
   }
 });
-
 
 
 // fim do novo bloco
