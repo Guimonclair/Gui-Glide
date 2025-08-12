@@ -12,6 +12,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Para receber dados de formulário
 
 // Twilio client
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -25,7 +26,6 @@ app.get('/', (req, res) => {
 app.post('/send-message', async (req, res) => {
   const { to, templateName, ...rest } = req.body;
 
-  // Reconstrói o objeto templateParams a partir dos campos individuais
   const templateParams = Object.fromEntries(
     Object.entries(rest)
       .filter(([key]) => key.startsWith('templateParams.'))
@@ -45,6 +45,24 @@ app.post('/send-message', async (req, res) => {
     console.error('Erro ao enviar mensagem:', error.message);
     res.status(500).send({ success: false, error: error.message });
   }
+});
+
+// 🆕 Rota para receber mensagens de clientes via webhook da Twilio
+app.post('/webhook', (req, res) => {
+  const from = req.body.From;
+  const body = req.body.Body;
+  const waId = req.body.WaId;
+
+  console.log('📩 Mensagem recebida via webhook!');
+  console.log(`De: ${from} | WhatsApp ID: ${waId}`);
+  console.log(`Conteúdo: ${body}`);
+
+  // Aqui você pode:
+  // - Registrar no Glide
+  // - Salvar em banco
+  // - Iniciar lógica de resposta dentro da janela de 24h
+
+  res.send('<Response></Response>'); // Twilio espera uma resposta XML
 });
 
 // Rota para debug de webhook
