@@ -1,12 +1,8 @@
-const express = require('express');
+const express    = require('express');
 const bodyParser = require('body-parser');
-const twilio = require('twilio');
+const twilio     = require('twilio');
 
 const app = express();
-
-const whatsappFrom = `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`;
-
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -15,79 +11,56 @@ app.get('/', (req, res) => {
 });
 
 // 🔐 Credenciais do Twilio
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken  = process.env.TWILIO_AUTH_TOKEN;
-const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+const accountSid     = process.env.TWILIO_ACCOUNT_SID;
+const authToken      = process.env.TWILIO_AUTH_TOKEN;
+const whatsappSender = process.env.TWILIO_WHATSAPP_NUMBER; 
+// Exemplo: TWILIO_WHATSAPP_NUMBER=+15076903704 (sem prefixo)
 
 const client = twilio(accountSid, authToken);
 
-// 🚪 Rota para envio de mensagem de serviço via template
-app.post('/send-message', async (req, res) => {
-  try {
-    const { to, template_id, Cliente, Pedido, Data } = req.body;
-    if (!to || !template_id || !Cliente || !Pedido || !Data) {
-      return res
-        .status(400)
-        .json({ error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.' });
-    }
-
-    console.log('📨 Dados recebidos do Glide:', { to, template_id, Cliente, Pedido, Data });
-
-    const response = await client.messages.create({
-      to: to,
-      from: fromNumber,
-      contentSid: template_id,
-      contentVariables: JSON.stringify({ "1": Cliente, "2": Pedido, "3": Data })
-    });
-
-    res.status(200).json({ success: true, sid: response.sid });
-  } catch (error) {
-    console.error('Erro ao enviar mensagem:', error);
-    res.status(500).json({ error: 'Erro ao enviar mensagem.' });
-  }
-});
-
+// ... sua rota /send-message permanece igual ...
 
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
 app.post('/send-catalogo', async (req, res) => {
-  // 1) Inspecione o que chega no corpo
-  console.log('📥 Payload do catálogo:', req.body);
-
-  // 2) Leia apenas o campo "to" (cliente)
-  const toRaw = req.body.to;
-  if (!toRaw) {
-    return res
-      .status(400)
-      .json({ error: 'Parâmetro "to" (número do cliente) é obrigatório.' });
-  }
-
-  // 3) Monte os valores finais com prefixo
-  const whatsappTo   = toRaw.startsWith('whatsapp:') 
-    ? toRaw 
-    : `whatsapp:${toRaw}`;
-  const whatsappFrom = `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`;
-
-  console.log('Enviando catálogo de', whatsappFrom, 'para', whatsappTo);
-
   try {
-    // Mensagem de texto
-    await client.messages.create({
-      from: whatsappFrom,
-      to:   whatsappTo,
-      body: 'Segue nosso catálogo de promoções. Aproveite! 😉'
-    });
+    // 1) Se vier do Glide manualmente: req.body.to
+    // 2) Se for callback do Twilio inbound: req.body.From
+    const rawClientNum = req.body.to   ||
+                         req.body.To   || 
+                         req.body.From || 
+                         req.body.from;
 
-    // Imagem 1
+    if (!rawClientNum) {
+      return res
+        .status(400)
+        .json({ error: 'Nenhum número de cliente detectado em "to" ou "From".' });
+    }
+
+    //  Prefixa whatsapp: se faltar
+    const to = rawClientNum.startsWith('whatsapp:')
+      ? rawClientNum
+      : `whatsapp:${rawClientNum}`;
+
+    const from = whatsappSender.startsWith('whatsapp:')
+      ? whatsappSender
+      : `whatsapp:${whatsappSender}`;
+
+    console.log('🛍️ Enviando catálogo de', from, 'para', to);
+
+    // 1) Texto
+    await client.messages.create({ from, to, body: 'Segue nosso catálogo de promoções. Aproveite! 😉' });
+
+    // 2) Imagem página 1
     await client.messages.create({
-      from:     whatsappFrom,
-      to:       whatsappTo,
+      from,
+      to,
       mediaUrl: ['https://i.imgur.com/ExdKOOz.png']
     });
 
-    // Imagem 2
+    // 3) Imagem página 2
     await client.messages.create({
-      from:     whatsappFrom,
-      to:       whatsappTo,
+      from,
+      to,
       mediaUrl: ['https://i.imgur.com/ZF6s192.png']
     });
 
@@ -102,7 +75,6 @@ app.post('/send-catalogo', async (req, res) => {
       .json({ error: 'Erro ao enviar catálogo.' });
   }
 });
-
 
 // 🚀 Inicializa o servidor
 const port = process.env.PORT || 3000;
