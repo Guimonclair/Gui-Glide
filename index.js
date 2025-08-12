@@ -58,14 +58,14 @@ console.log('Enviando de', from, 'para', to);
     await client.messages.create({
       from,
       to,
-      mediaUrl: ['https://i.imgur.com/ExdKOOz.png']
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
     });
 
     // 3) Imagem página 2
     await client.messages.create({
       from,
       to,
-      mediaUrl: ['https://i.imgur.com/ZF6s192.png']
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
     });
 
     return res
