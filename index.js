@@ -25,11 +25,16 @@ app.post('/send-catalogo', async (req, res) => {
   try {
     // 1) Se vier do Glide manualmente: req.body.to
     // 2) Se for callback do Twilio inbound: req.body.From
-    const rawClientNum = req.body.to   ||
-                         req.body.To   || 
-                         req.body.From || 
-                         req.body.from;
+   const rawClientNum = req.body.to   ||
+                     req.body.From ||
+                     '';
+const to = rawClientNum.startsWith('whatsapp:')
+  ? rawClientNum
+  : `whatsapp:${rawClientNum}`;
 
+const from = process.env.TWILIO_WHATSAPP_NUMBER.startsWith('whatsapp:')
+  ? process.env.TWILIO_WHATSAPP_NUMBER
+  : `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`;
     if (!rawClientNum) {
       return res
         .status(400)
@@ -40,16 +45,7 @@ app.post('/send-catalogo', async (req, res) => {
 
     //  Prefixa whatsapp: se faltar
 
-const rawClientNum = req.body.to   ||
-                     req.body.From ||
-                     '';
-const to = rawClientNum.startsWith('whatsapp:')
-  ? rawClientNum
-  : `whatsapp:${rawClientNum}`;
 
-const from = process.env.TWILIO_WHATSAPP_NUMBER.startsWith('whatsapp:')
-  ? process.env.TWILIO_WHATSAPP_NUMBER
-  : `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`;
 
 console.log('Enviando de', from, 'para', to);
 
