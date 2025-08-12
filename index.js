@@ -15,17 +15,17 @@ app.get('/', (req, res) => {
 
 // Rota do webhook
 app.post('/webhook', (req, res) => {
-  // Log dos dados recebidos no terminal
   console.log('📨 Dados recebidos no webhook:', req.body);
 
-  // Cria resposta Twilio (TwiML)
   const MessagingResponse = twilio.twiml.MessagingResponse;
   const twiml = new MessagingResponse();
 
-  // Mensagem de resposta automática
-  twiml.message('Olá! Recebemos sua mensagem 😊');
+  // Cria mensagem com texto explicativo e duas imagens
+  const message = twiml.message();
+  message.body('Seguem nossas promoções da semana. Aproveite para renovar seu estoque!');
+  message.media('https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O');
+  message.media('https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE');
 
-  // Envia resposta como XML
   res.type('text/xml');
   res.send(twiml.toString());
 });
