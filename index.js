@@ -62,59 +62,44 @@ app.post('/send-message', async (req, res) => {
 });
 
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
+
+// inicio do novo bloco
+
 app.post('/send-catalogo', async (req, res) => {
+  // filtro rápido: só executa o catálogo para inbound text
+  // nos status callbacks e outros eventos devolve 200 e pára aqui
+  if (req.body.Direction !== 'inbound' || req.body.MessageType !== 'text') {
+    console.log('Webhook ignorado (não é inbound text):', req.body);
+    return res.sendStatus(200);
+  }
+
+  // a partir daqui, tenho certeza que é um inbound text
+  const rawClientNum = req.body.From || req.body.to;
+  const to = rawClientNum.startsWith('whatsapp:')
+    ? rawClientNum
+    : `whatsapp:${rawClientNum}`;
+
+  console.log('▶️ inbound text detectado, enviando catálogo para', to);
+
   try {
-    // Se veio manual pelo Glide: req.body.to
-    // Se veio por webhook do Twilio: req.body.From
-    const rawClientNum = req.body.to || req.body.From;
-
-    if (!rawClientNum) {
-      return res.status(400).json({
-        error: 'Nenhum número de cliente detectado em "to" ou "From".'
-      });
-    }
-
-    // Normaliza o número do cliente
-    const to = rawClientNum.startsWith('whatsapp:')
-      ? rawClientNum
-      : `whatsapp:${rawClientNum}`;
-
-    console.log('DEBUG -> from:', fromNumber);
-    console.log('DEBUG -> to:  ', to);
-
-    // 1) Mensagem de texto
-    await client.messages.create({
-      from: fromNumber,
-      to:   to,
-      body: 'Segue nosso catálogo de promoções. Aproveite! 😉'
+    await client.messages.create({ from: fromNumber, to, body: 'Segue nosso catálogo de promoções…' });
+    await client.messages.create({ from: fromNumber, to,
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
     });
-
-    // 2) Primeira imagem
-    await client.messages.create({
-      from:     fromNumber,
-      to:       to,
-      mediaUrl: [
-        'https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O'
-      ]
+    await client.messages.create({ from: fromNumber, to,
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
     });
-
-    // 3) Segunda imagem
-    await client.messages.create({
-      from:     fromNumber,
-      to:       to,
-      mediaUrl: [
-        'https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE'
-      ]
-    });
-
-    return res
-      .status(200)
-      .json({ success: true, message: 'Catálogo enviado com sucesso.' });
-  } catch (error) {
-    console.error('❌ [SEND-CATALOGO] Erro ao enviar catálogo:', error);
-    return res.status(500).json({ error: 'Erro ao enviar catálogo.' });
+    return res.json({ success: true, message: 'Catálogo enviado.' });
+  } catch (err) {
+    console.error('Erro ao enviar catálogo:', err);
+    return res.status(500).json({ error: 'Falha ao enviar catálogo.' });
   }
 });
+
+
+
+// fim do novo bloco
+
 
 // 🚀 Inicializa o servidor
 const port = process.env.PORT || 3000;
