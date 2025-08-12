@@ -14,20 +14,33 @@ app.get('/', (req, res) => {
 });
 
 // Rota do webhook
-app.post('/webhook', (req, res) => {
+app.post('/webhook', async (req, res) => {
   console.log('📨 Dados recebidos no webhook:', req.body);
 
-  const MessagingResponse = twilio.twiml.MessagingResponse;
-  const twiml = new MessagingResponse();
+  const from = req.body.From; // número do cliente
+  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-  // Cria mensagem com texto explicativo e duas imagens
-  const message = twiml.message();
-  message.body('Seguem nossas promoções da semana. Aproveite para renovar seu estoque!');
-  message.media('https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O');
-  message.media('https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE');
+  try {
+    // Mensagem 1: texto + primeira imagem
+    await client.messages.create({
+      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
+      to: from,
+      body: 'Seguem nossas promoções da semana. Aproveite para renovar seu estoque!',
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
+    });
 
-  res.type('text/xml');
-  res.send(twiml.toString());
+    // Mensagem 2: segunda imagem
+    await client.messages.create({
+      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
+      to: from,
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
+    });
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Erro ao enviar mensagens:', error.message);
+    res.status(500).send('Erro ao enviar mensagens');
+  }
 });
 
 // Inicia o servidor
