@@ -88,7 +88,25 @@ app.all('*', (req, res) => {
 });
 
 // Inicia o servidor
+
+const express = require('express');
+const app = express();
+
+app.use(express.urlencoded({ extended: true }));
+
+app.post('/webhook', (req, res) => {
+  const { From, Body, WaId } = req.body;
+
+  console.log('📩 Webhook recebido!');
+  console.log(`De: ${From} | Conteúdo: ${Body} | WaId: ${WaId}`);
+
+  res.set('Content-Type', 'text/xml');
+  res.status(200).send('<Response></Response>');
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
+
+
