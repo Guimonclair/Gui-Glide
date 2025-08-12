@@ -60,14 +60,14 @@ app.post('/send-catalogo', async (req, res) => {
     // Mensagem 1: texto
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
-      to: `whatsapp:${to}`,
+      to: `whatsapp:${To}`,
       body: 'Segue nosso catálogo de promoções. Aproveite para renovar seu estoque! 😉'
     });
 
     // Mensagem 2: imagem da primeira página
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
-      to: `whatsapp:${to}`,
+      to: `whatsapp:${To}`,
       // mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
       mediaUrl: ['https://i.imgur.com/ExdKOOz.png'] // imagem 1
     });
@@ -75,7 +75,7 @@ app.post('/send-catalogo', async (req, res) => {
     // Mensagem 3: imagem da segunda página
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
-      to: `whatsapp:${to}`,
+      to: `whatsapp:${To}`,
      //  mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
       mediaUrl: ['https://i.imgur.com/ZF6s192.png'] // imagem 2
 
