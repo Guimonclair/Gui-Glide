@@ -48,6 +48,7 @@ app.post('/send-message', async (req, res) => {
 });
 
 // 🆕 Rota para receber mensagens de clientes via webhook da Twilio
+
 app.post('/webhook', (req, res) => {
   const from = req.body.From;
   const body = req.body.Body;
@@ -57,13 +58,10 @@ app.post('/webhook', (req, res) => {
   console.log(`De: ${from} | WhatsApp ID: ${waId}`);
   console.log(`Conteúdo: ${body}`);
 
-  // Aqui você pode:
-  // - Registrar no Glide
-  // - Salvar em banco
-  // - Iniciar lógica de resposta dentro da janela de 24h
-
-  res.send('<Response></Response>'); // Twilio espera uma resposta XML
+  res.set('Content-Type', 'text/xml');
+  res.status(200).send('<Response></Response>');
 });
+
 
 // Rota para debug de webhook
 app.post('/debug-webhook', (req, res) => {
