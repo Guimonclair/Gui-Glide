@@ -21,15 +21,21 @@ app.post('/webhook', async (req, res) => {
   const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
   try {
-    // Mensagem 1: texto + primeira imagem
+    // Mensagem 1: apenas o texto explicativo
     await client.messages.create({
       from: `whatsapp:${process.env.TWILIO_NUMBER}`,
       to: from,
-      body: 'Seguem nossas promoções da semana. Aproveite para renovar seu estoque!',
+      body: 'Seguem nossas promoções da semana. Aproveite para renovar seu estoque!'
+    });
+
+    // Mensagem 2: primeira imagem
+    await client.messages.create({
+      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
+      to: from,
       mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
     });
 
-    // Mensagem 2: segunda imagem
+    // Mensagem 3: segunda imagem
     await client.messages.create({
       from: `whatsapp:${process.env.TWILIO_NUMBER}`,
       to: from,
