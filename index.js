@@ -42,7 +42,8 @@ app.post('/webhook', async (req, res) => {
       mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
     });
 
-    res.sendStatus(200);
+    res.sendStatus(204);
+    
   } catch (error) {
     console.error('Erro ao enviar mensagens:', error.message);
     res.status(500).send('Erro ao enviar mensagens');
