@@ -19,6 +19,42 @@ const whatsappSender = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
 
 // ... sua rota /send-message permanece igual ...
+// 🚪 Rota para envio de mensagem de serviço via template
+app.post('/send-message', async (req, res) => {
+  try {
+    const { to, template_id, Cliente, Pedido, Data } = req.body;
+
+    if (!to || !template_id || !Cliente || !Pedido || !Data) {
+      return res
+        .status(400)
+        .json({ error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.' });
+    }
+
+    console.log('📨 Dados recebidos do Glide:', { to, template_id, Cliente, Pedido, Data });
+
+    const response = await client.messages.create({
+      to: to.startsWith('whatsapp:') ? to : `whatsapp:${to}`,
+      from: fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`,
+      contentSid: template_id,
+      contentVariables: JSON.stringify({
+        '1': Cliente,
+        '2': Pedido,
+        '3': Data
+      })
+    });
+
+    res.status(200).json({ success: true, sid: response.sid });
+  } catch (error) {
+    console.error('Erro ao enviar mensagem:', error);
+    res.status(500).json({ error: 'Erro ao enviar mensagem.' });
+  }
+});
+
+
+
+
+
+
 
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
 app.post('/send-catalogo', async (req, res) => {
