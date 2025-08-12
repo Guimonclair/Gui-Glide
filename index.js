@@ -49,10 +49,10 @@ app.post('/send-message', async (req, res) => {
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
 app.post('/send-catalogo', async (req, res) => {
   try {
-    const { to } = req.body;
+    const { To } = req.body;
 
-    if (!to) {
-      return res.status(400).json({ error: 'Parâmetro "to" é obrigatório.' });
+    if (!To) {
+      return res.status(400).json({ error: 'Parâmetro "To" é obrigatório.' });
     }
 
     console.log('🛍️ Enviando catálogo promocional para:', to);
