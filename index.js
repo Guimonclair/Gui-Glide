@@ -1,35 +1,47 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const twilio = require('twilio');
+
+const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json()); // Adicionado para aceitar JSON
+app.use(bodyParser.json());
 
-app.post('/webhook', async (req, res) => {
-  console.log('📨 Dados recebidos no webhook:', req.body);
+// 🔐 Credenciais do Twilio
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
-  const from = `whatsapp:${req.body.From}`; // Garante o prefixo
-  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const client = twilio(accountSid, authToken);
 
+// 🚪 Rota para envio de mensagem de serviço via template
+app.post('/send-message', async (req, res) => {
   try {
-    await client.messages.create({
-      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
-      to: from,
-      body: 'Seguem nossas promoções da semana. Aproveite para renovar seu estoque!'
+    const { to, template_id, Cliente, Pedido, Data } = req.body;
+
+    if (!to || !template_id || !Cliente || !Pedido || !Data) {
+      return res.status(400).json({ error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.' });
+    }
+
+    const response = await client.messages.create({
+      to: to,
+      from: fromNumber,
+      contentSid: template_id,
+      contentVariables: JSON.stringify({
+        "1": Cliente,
+        "2": Pedido,
+        "3": Data
+      })
     });
 
-    await client.messages.create({
-      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
-      to: from,
-      mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
-    });
-
-    await client.messages.create({
-      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
-      to: from,
-      mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
-    });
-
-    res.sendStatus(204);
-    
+    res.status(200).json({ success: true, sid: response.sid });
   } catch (error) {
-    console.error('Erro ao enviar mensagens:', error);
-    res.status(500).send('Erro ao enviar mensagens');
+    console.error('Erro ao enviar mensagem:', error);
+    res.status(500).json({ error: 'Erro ao enviar mensagem.' });
   }
+});
+
+// 🚀 Inicializa o servidor
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
 });
