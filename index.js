@@ -55,12 +55,12 @@ app.post('/send-catalogo', async (req, res) => {
       return res.status(400).json({ error: 'Parâmetro "To" é obrigatório.' });
     }
 
-    console.log('🛍️ Enviando catálogo promocional para:', to);
+    console.log('🛍️ Enviando catálogo promocional para:', To);
 
     // Mensagem 1: texto
     await client.messages.create({
       from: `whatsapp:${fromNumber}`,
-      to: `whatsapp:${To}`,
+      To: `whatsapp:${To}`,
       body: 'Segue nosso catálogo de promoções. Aproveite para renovar seu estoque! 😉'
     });
 
