@@ -89,7 +89,6 @@ app.all('*', (req, res) => {
 
 // Inicia o servidor
 
-const express = require('express');
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
