@@ -17,7 +17,7 @@ app.post('/webhook', async (req, res) => {
     await client.messages.create({
       from: `whatsapp:${process.env.TWILIO_NUMBER}`,
       to: from,
-      mediaUrl: [https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O]
+      mediaUrl: ['https://drive.google.com/uc?export=view&id=1HYLcNxPXQR0c7-uVy3CzARigdcbJep3O']
     });
 
     await client.messages.create({
