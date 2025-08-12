@@ -35,17 +35,25 @@ app.post('/send-catalogo', async (req, res) => {
         .status(400)
         .json({ error: 'Nenhum número de cliente detectado em "to" ou "From".' });
     }
+     console.log('DEBUG -> from:', from);
+     console.log('DEBUG -> to:', to);
 
     //  Prefixa whatsapp: se faltar
-    const to = rawClientNum.startsWith('whatsapp:')
-      ? rawClientNum
-      : `whatsapp:${rawClientNum}`;
 
-    const from = whatsappSender.startsWith('whatsapp:')
-      ? whatsappSender
-      : `whatsapp:${whatsappSender}`;
+const rawClientNum = req.body.to   ||
+                     req.body.From ||
+                     '';
+const to = rawClientNum.startsWith('whatsapp:')
+  ? rawClientNum
+  : `whatsapp:${rawClientNum}`;
 
-    console.log('🛍️ Enviando catálogo de', from, 'para', to);
+const from = process.env.TWILIO_WHATSAPP_NUMBER.startsWith('whatsapp:')
+  ? process.env.TWILIO_WHATSAPP_NUMBER
+  : `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`;
+
+console.log('Enviando de', from, 'para', to);
+
+
 
     // 1) Texto
     await client.messages.create({ from, to, body: 'Segue nosso catálogo de promoções. Aproveite! 😉' });
