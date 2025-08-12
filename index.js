@@ -22,6 +22,30 @@ app.post('/send-message', async (req, res) => {
       return res.status(400).json({ error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.' });
     }
 
+// 🧾 Log dos dados recebidos
+    console.log('📨 Dados recebidos do Glide:', {
+      to,
+      template_id,
+      Cliente,
+      Pedido,
+      Data
+    });
+
+    // 🧪 Log do payload que será enviado ao Twilio
+    console.log('🚀 Payload enviado ao Twilio:', {
+      to,
+      from: fromNumber,
+      contentSid: template_id,
+      contentVariables: {
+        "1": Cliente,
+        "2": Pedido,
+        "3": Data
+      }
+    });
+
+
+
+    
     const response = await client.messages.create({
       to: to,
       from: fromNumber,
