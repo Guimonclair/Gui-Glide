@@ -47,51 +47,62 @@ app.post('/send-message', async (req, res) => {
   }
 });
 
+
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
 app.post('/send-catalogo', async (req, res) => {
+  // 1) Inspecione o que chega no corpo
+  console.log('📥 Payload do catálogo:', req.body);
+
+  // 2) Leia apenas o campo "to" (cliente)
+  const toRaw = req.body.to;
+  if (!toRaw) {
+    return res
+      .status(400)
+      .json({ error: 'Parâmetro "to" (número do cliente) é obrigatório.' });
+  }
+
+  // 3) Monte os valores finais com prefixo
+  const whatsappTo   = toRaw.startsWith('whatsapp:') 
+    ? toRaw 
+    : `whatsapp:${toRaw}`;
+  const whatsappFrom = `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`;
+
+  console.log('Enviando catálogo de', whatsappFrom, 'para', whatsappTo);
+
   try {
-    // Normaliza o parâmetro 'to'
-    const toRaw = req.body.to || req.body.To;
-    if (!toRaw) {
-      return res.status(400).json({ error: 'Parâmetro "to" é obrigatório.' });
-    }
-
-    // Garante o prefixo whatsapp:
-    const to = toRaw.startsWith('whatsapp:')
-      ? toRaw
-      : `whatsapp:${toRaw}`;
-
-    console.log('🛍️ Enviando catálogo promocional para:', to);
-
-    // 1) Mensagem de texto
-   
-         await client.messages.create({
-       from: whatsappFrom,
-       to:   `whatsapp:${toRaw}`,   // garanta que venha só o número limpo
-       body: 'Segue nosso catálogo de promoções. Aproveite para renovar seu estoque! 😉'
-     });
-
-    
-    // 2) Imagem página 1
+    // Mensagem de texto
     await client.messages.create({
-      from: `whatsapp:${fromNumber}`,
-      to: to,
+      from: whatsappFrom,
+      to:   whatsappTo,
+      body: 'Segue nosso catálogo de promoções. Aproveite! 😉'
+    });
+
+    // Imagem 1
+    await client.messages.create({
+      from:     whatsappFrom,
+      to:       whatsappTo,
       mediaUrl: ['https://i.imgur.com/ExdKOOz.png']
     });
 
-    // 3) Imagem página 2
+    // Imagem 2
     await client.messages.create({
-      from: `whatsapp:${fromNumber}`,
-      to: to,
+      from:     whatsappFrom,
+      to:       whatsappTo,
       mediaUrl: ['https://i.imgur.com/ZF6s192.png']
     });
 
-    res.status(200).json({ success: true, message: 'Catálogo enviado com sucesso.' });
+    return res
+      .status(200)
+      .json({ success: true, message: 'Catálogo enviado com sucesso.' });
+
   } catch (error) {
     console.error('Erro ao enviar catálogo:', error);
-    res.status(500).json({ error: 'Erro ao enviar catálogo.' });
+    return res
+      .status(500)
+      .json({ error: 'Erro ao enviar catálogo.' });
   }
 });
+
 
 // 🚀 Inicializa o servidor
 const port = process.env.PORT || 3000;
