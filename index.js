@@ -68,19 +68,30 @@ app.post('/send-message', async (req, res) => {
 app.post('/send-catalogo', async (req, res) => {
   console.log('📥 Webhook /send-catalogo recebido:', req.body);
 
-  // só prossegue em inbound-text (quando o cliente manda algo)
-  if (req.body.SmsStatus !== 'received' || req.body.MessageType !== 'text') {
-    console.log('🔇 Ignorando webhook (não é inbound text).');
+  const tipo = req.body.MessageType;
+  if (req.body.SmsStatus !== 'received' || (tipo !== 'text' && tipo !== 'button')) {
+    console.log(`🔇 Ignorando webhook (tipo "${tipo}" não é aceito).`);
     return res.sendStatus(200);
   }
 
-  // chega aqui só se for mensagem RECEBIDA do cliente
   const rawClientNum = req.body.From;
   const to = rawClientNum.startsWith('whatsapp:')
     ? rawClientNum
     : `whatsapp:${rawClientNum}`;
 
-  console.log('▶️ inbound text confirmado, enviando catálogo para', to);
+  const payload = req.body.ButtonPayload?.trim().toLowerCase();
+  const body    = req.body.Body?.trim().toLowerCase();
+
+  const isPayloadOk = payload === 'ok';
+  const isBodySim   = body === 'sim';
+  const isBodyOk    = body === 'ok';
+
+  if (!isPayloadOk && !isBodySim && !isBodyOk) {
+    console.log('🛑 Condição não atendida. Catálogo não será enviado.');
+    return res.sendStatus(200);
+  }
+
+  console.log('▶️ Condição atendida, enviando catálogo para', to);
 
   try {
     await client.messages.create({
