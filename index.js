@@ -24,17 +24,13 @@ const client = twilio(accountSid, authToken);
 // 🚪 Rota para envio de mensagem de serviço via template
 app.post('/send-message', async (req, res) => {
   try {
-    const { to, template_id, Cliente, Pedido, Data, Mensagem } = req.body;
+    const { to, to2, to3, template_id, Cliente, Pedido, Data, Mensagem } = req.body;
 
     if (!to || !template_id || !Cliente || !Pedido || !Data) {
       return res.status(400).json({
         error: 'Parâmetros "to", "template_id", "Cliente", "Pedido" e "Data" são obrigatórios.'
       });
     }
-
-    const toNumber = to.startsWith('whatsapp:')
-      ? to
-      : `whatsapp:${to}`;
 
     const contentVariables = {
       '1': Cliente,
@@ -46,20 +42,34 @@ app.post('/send-message', async (req, res) => {
       contentVariables['4'] = Mensagem;
     }
 
-    console.log('📨 [SEND-MESSAGE] Payload recebido:', {
-      toNumber, template_id, Cliente, Pedido, Data, Mensagem
-    });
+    const destinatarios = [to, to2, to3]
+      .filter(num => typeof num === 'string' && num.trim() !== '')
+      .map(num => num.startsWith('whatsapp:') ? num : `whatsapp:${num}`);
 
-    const response = await client.messages.create({
-      to:               toNumber,
-      from:             fromNumber,
-      contentSid:       template_id,
-      contentVariables: JSON.stringify(contentVariables)
-    });
+    console.log('📨 [SEND-MESSAGE] Enviando para:', destinatarios);
+    console.log('📦 Variáveis:', contentVariables);
 
-    return res.status(200).json({ success: true, sid: response.sid });
+    const results = [];
+
+    for (const numero of destinatarios) {
+      try {
+        const response = await client.messages.create({
+          to: numero,
+          from: fromNumber,
+          contentSid: template_id,
+          contentVariables: JSON.stringify(contentVariables)
+        });
+
+        results.push({ to: numero, sid: response.sid });
+      } catch (err) {
+        console.error(`❌ Erro ao enviar para ${numero}:`, err);
+        results.push({ to: numero, error: true });
+      }
+    }
+
+    return res.status(200).json({ success: true, results });
   } catch (error) {
-    console.error('❌ [SEND-MESSAGE] Erro ao enviar mensagem:', error);
+    console.error('❌ [SEND-MESSAGE] Erro geral ao enviar mensagem:', error);
     return res.status(500).json({ error: 'Erro ao enviar mensagem.' });
   }
 });
