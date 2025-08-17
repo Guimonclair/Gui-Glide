@@ -13,10 +13,8 @@ app.get('/', (req, res) => {
 // 🔐 Credenciais do Twilio
 const accountSid     = process.env.TWILIO_ACCOUNT_SID;
 const authToken      = process.env.TWILIO_AUTH_TOKEN;
-// Número aprovado para WhatsApp no Twilio (sem prefixo “whatsapp:” na variável)
 const fromNumberRaw  = process.env.TWILIO_WHATSAPP_NUMBER;
 
-// Prefixa “whatsapp:” se faltar
 const fromNumber = fromNumberRaw.startsWith('whatsapp:')
   ? fromNumberRaw
   : `whatsapp:${fromNumberRaw}`;
@@ -26,7 +24,7 @@ const client = twilio(accountSid, authToken);
 // 🚪 Rota para envio de mensagem de serviço via template
 app.post('/send-message', async (req, res) => {
   try {
-    const { to, template_id, Cliente, Pedido, Data } = req.body;
+    const { to, template_id, Cliente, Pedido, Data, Mensagem } = req.body;
 
     if (!to || !template_id || !Cliente || !Pedido || !Data) {
       return res.status(400).json({
@@ -34,24 +32,29 @@ app.post('/send-message', async (req, res) => {
       });
     }
 
-    // Normaliza o número do cliente
     const toNumber = to.startsWith('whatsapp:')
       ? to
       : `whatsapp:${to}`;
 
+    const contentVariables = {
+      '1': Cliente,
+      '2': Pedido,
+      '3': Data
+    };
+
+    if (Mensagem) {
+      contentVariables['4'] = Mensagem;
+    }
+
     console.log('📨 [SEND-MESSAGE] Payload recebido:', {
-      toNumber, template_id, Cliente, Pedido, Data
+      toNumber, template_id, Cliente, Pedido, Data, Mensagem
     });
 
     const response = await client.messages.create({
       to:               toNumber,
       from:             fromNumber,
       contentSid:       template_id,
-      contentVariables: JSON.stringify({
-        '1': Cliente,
-        '2': Pedido,
-        '3': Data
-      })
+      contentVariables: JSON.stringify(contentVariables)
     });
 
     return res.status(200).json({ success: true, sid: response.sid });
@@ -62,8 +65,6 @@ app.post('/send-message', async (req, res) => {
 });
 
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
-
-// inicio do novo bloco
 
 app.post('/send-catalogo', async (req, res) => {
   console.log('📥 Webhook /send-catalogo recebido:', req.body);
@@ -118,10 +119,6 @@ app.post('/send-catalogo', async (req, res) => {
     return res.status(500).json({ error: 'Erro ao enviar catálogo.' });
   }
 });
-
-
-// fim do novo bloco
-
 
 // 🚀 Inicializa o servidor
 const port = process.env.PORT || 3000;
