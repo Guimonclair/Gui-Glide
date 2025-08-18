@@ -123,7 +123,10 @@ app.post('/send-catalogo', async (req, res) => {
       mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
     });
 
-    return res.status(200).json({ success: true, message: 'Catálogo enviado com sucesso.' });
+
+
+    return res.sendStatus(204);
+    
   } catch (error) {
     console.error('❌ [SEND-CATALOGO] Erro ao enviar catálogo:', error);
     return res.status(500).json({ error: 'Erro ao enviar catálogo.' });
