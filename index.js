@@ -24,7 +24,12 @@ const client = twilio(accountSid, authToken);
 // 🚪 Rota para envio de mensagem de serviço via template
 app.post('/send-message', async (req, res) => {
   try {
-    const { to, to2, to3, template_id, Cliente, Pedido, Data, Mensagem } = req.body;
+    const {
+      to, to2, to3,
+      template_id,
+      Cliente, Pedido, Data,
+      Mensagem
+    } = req.body;
 
     if (!to || !template_id || !Cliente || !Pedido || !Data) {
       return res.status(400).json({
@@ -38,8 +43,8 @@ app.post('/send-message', async (req, res) => {
       '3': Data
     };
 
-    if (Mensagem) {
-      contentVariables['4'] = Mensagem;
+    if (typeof Mensagem === 'string' && Mensagem.trim() !== '') {
+      contentVariables['4'] = Mensagem.trim();
     }
 
     const destinatarios = [to, to2, to3]
@@ -75,7 +80,6 @@ app.post('/send-message', async (req, res) => {
 });
 
 // 🛍️ Rota para envio do catálogo promocional (3 mensagens)
-
 app.post('/send-catalogo', async (req, res) => {
   console.log('📥 Webhook /send-catalogo recebido:', req.body);
 
@@ -122,8 +126,6 @@ app.post('/send-catalogo', async (req, res) => {
       to,
       mediaUrl: ['https://drive.google.com/uc?export=view&id=1Rex51Lhmtn0DO2kSDHKSDio26zaVYARE']
     });
-
-
 
     return res.sendStatus(204);
     
