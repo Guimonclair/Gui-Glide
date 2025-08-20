@@ -79,7 +79,30 @@ app.post('/send-message', async (req, res) => {
   }
 });
 
-// 🛍️ Rota para envio do catálogo promocional (3 mensagens)
+// 🛍️ Rota para envio do catálogo promocional (agora envia apenas uma mensagem de serviço)
+app.post('/send-catalogo', async (req, res) => {
+  console.log('📥 Webhook /send-catalogo recebido:', req.body);
+
+  const rawClientNum = req.body.From;
+  const to = rawClientNum.startsWith('whatsapp:')
+    ? rawClientNum
+    : `whatsapp:${rawClientNum}`;
+
+  try {
+    await client.messages.create({
+      from: fromNumber,
+      to,
+      body: 'Essa é uma máquina de serviço. Para entrar em contato conosco use o telefone (31) 98658-0524.'
+    });
+
+    console.log('✅ Mensagem de serviço enviada para', to);
+    return res.sendStatus(204);
+
+  } catch (error) {
+    console.error('❌ [SEND-CATALOGO] Erro ao enviar mensagem de serviço:', error);
+    return res.status(500).json({ error: 'Erro ao enviar mensagem de serviço.' });
+  }
+});// 🛍️ Rota para envio do catálogo promocional (3 mensagens)
 app.post('/send-catalogo', async (req, res) => {
   console.log('📥 Webhook /send-catalogo recebido:', req.body);
 
